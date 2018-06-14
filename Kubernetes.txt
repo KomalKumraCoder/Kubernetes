@@ -1,0 +1,112 @@
+master $ launch.sh
+Waiting for Kubernetes to start...
+Kubernetes started
+master $ kubectl cluster-info
+Kubernetes master is running at https://172.17.0.20:6443
+KubeDNS is running at https://172.17.0.20:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+master $ git init .
+Initialized empty Git repository in /root/.git/
+master $ git clone http://github.com/awesomemayank007/devops
+Cloning into 'devops'...
+remote: Counting objects: 103, done.
+remote: Compressing objects: 100% (15/15), done.
+remote: Total 103 (delta 12), reused 22 (delta 10), pack-reused 77
+Receiving objects: 100% (103/103), 15.16 KiB | 0 bytes/s, done.
+Resolving deltas: 100% (27/27), done.
+Checking connectivity... done.
+master $ ls
+devops  go
+master $ cd devops
+master $ ls
+ansible  disable_port_security.sh  docker  kubernetes_scripts  python-scripts  README.md  unused-image-finder.sh
+master $ cd kubernetes_scripts
+master $ ls
+commands    dockerfile         dockerfile_ubuntu  mayank-app-deployment.yaml  my-app-using-RC  ns   RC
+deployment  dockerfile_centos  index.html         my-app-using-deployment     mynamespace.yml  pod  Service
+master $ sudo apt install docker
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following NEW packages will be installed:
+  docker
+0 upgraded, 1 newly installed, 0 to remove and 175 not upgraded.
+Need to get 12.2 kB of archives.
+After this operation, 65.5 kB of additional disk space will be used.
+Get:1 http://ca.archive.ubuntu.com/ubuntu xenial/universe amd64 docker amd64 1.5-1 [12.2 kB]
+Fetched 12.2 kB in 0s (138 kB/s)
+Selecting previously unselected package docker.
+(Reading database ... 70326 files and directories currently installed.)
+Preparing to unpack .../docker_1.5-1_amd64.deb ...
+Unpacking docker (1.5-1) ...
+Processing triggers for man-db (2.7.5-1) ...
+Setting up docker (1.5-1) ...
+master $ docker run -d -p 8080:8000 -p 50000:50000 docker.io/jenkins
+Unable to find image 'jenkins:latest' locally
+latest: Pulling from library/jenkins
+cc1a78bfd46b: Pulling fs layer
+d2c05365ee2a: Pulling fs layer
+231cb0e216d3: Pulling fs layer
+3d2aa70286b8: Pulling fs layer
+b621e52d9d65: Pulling fs layer
+f12314f6054a: Pull complete
+f5ce6397976f: Pull complete
+965859e0769b: Pull complete
+4a76f2995e39: Pull complete
+66460fcc3439: Pull complete
+5cebe5764db8: Pull complete
+e9c0313308e4: Pull complete
+fa7da5f9c842: Pull complete
+413c45ec348b: Pull complete
+765c8b11cecb: Pull complete
+eaef52e80d79: Pull complete
+af3004ee0c13: Pull complete
+861f33e616c1: Pull complete
+01d0994305ab: Pull complete
+67828a4ce0d3: Pull complete
+Digest: sha256:7ef3b03a8f870dca547d28b0cf47915a50eb220a9d191dcdde14b89df3055eef
+Status: Downloaded newer image for jenkins:latest
+1377a4669cfa2374ed5e9eb5cfcb4668826795de74799140d7c007dcdee29d40
+master $ kubectl -n default create -f pod
+pod "nginx" created
+master $ kubectl -n default get pods
+NAME      READY     STATUS    RESTARTS   AGE
+nginx     1/1       Running   0          26s
+master $ alias k="kubectl -n default"
+master $ k create -f my-app-using-rc
+error: the path "my-app-using-rc" does not exist
+master $ k create -f RC
+replicationcontroller "my-nginx-rc" created
+master $ s get pods
+s: command not found
+master $ k get pods
+NAME                READY     STATUS    RESTARTS   AGE
+my-nginx-rc-lv56k   1/1       Running   0          1m
+nginx               1/1       Running   0          3m
+master $ cat RC
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: my-nginx-rc
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+master $ k expose --type -nodeport --port=80 rc/my-nginx
+master $ k expose --type -Nodeport --port=80 rc/my-nginx
+master $ hostname -I
+172.17.0.20 172.18.0.1 10.32.0.1
+master $ k get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   28m
+master $ curl 172.18.0.1 10.32.0.1
+
